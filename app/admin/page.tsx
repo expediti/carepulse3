@@ -1,24 +1,37 @@
-import React from 'react';
-import { Appointment } from '../../types';
-import { Button } from '../ui/button';
+"use client"
+
+import React, { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useApp } from '@/lib/context';
+import { Button } from '@/components/ui/button';
 import { Users, Calendar, AlertCircle, CheckCircle, XCircle } from 'lucide-react';
 
-interface AdminDashboardProps {
-  appointments: Appointment[];
-  onUpdateStatus: (id: string, status: Appointment['status']) => void;
-  onLogout: () => void;
-}
+export default function AdminDashboard() {
+  const router = useRouter();
+  const { currentUser, appointments, updateAppointmentStatus, setCurrentUser } = useApp();
 
-export const AdminDashboard: React.FC<AdminDashboardProps> = ({ appointments, onUpdateStatus, onLogout }) => {
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'admin') {
+      router.push('/auth');
+    }
+  }, [currentUser, router]);
+
+  if (!currentUser) return null;
+
   const total = appointments.length;
   const pending = appointments.filter(a => a.status === 'pending').length;
   const scheduled = appointments.filter(a => a.status === 'scheduled').length;
   const cancelled = appointments.filter(a => a.status === 'cancelled').length;
 
+  const handleLogout = () => {
+    setCurrentUser(null);
+    router.push('/');
+  };
+
   return (
     <div className="min-h-screen bg-gray-100 flex">
       {/* Sidebar */}
-      <aside className="w-64 bg-slate-900 text-white hidden md:block">
+      <aside className="w-64 bg-slate-900 text-white hidden md:block fixed h-full">
         <div className="p-6">
           <h2 className="text-2xl font-bold tracking-tight">MedAdmin</h2>
         </div>
@@ -31,7 +44,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ appointments, on
             <Users className="w-5 h-5" />
             Patients
           </a>
-          <button onClick={onLogout} className="flex w-full items-center gap-3 px-4 py-3 text-red-400 hover:bg-white/5 rounded-lg transition-colors mt-auto">
+          <button onClick={handleLogout} className="flex w-full items-center gap-3 px-4 py-3 text-red-400 hover:bg-white/5 rounded-lg transition-colors mt-auto absolute bottom-4 w-[calc(100%-2rem)]">
             <XCircle className="w-5 h-5" />
             Logout
           </button>
@@ -39,13 +52,13 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ appointments, on
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 overflow-y-auto">
+      <main className="flex-1 md:ml-64 overflow-y-auto">
         <header className="bg-white shadow-sm border-b border-gray-200 h-16 flex items-center justify-between px-8 md:hidden">
             <span className="font-bold text-slate-900">MedAdmin Panel</span>
-            <Button size="sm" variant="outline" onClick={onLogout}>Logout</Button>
+            <Button size="sm" variant="outline" onClick={handleLogout}>Logout</Button>
         </header>
 
-        <div className="p-8">
+        <div className="p-8 pb-20">
           <h1 className="text-2xl font-bold text-slate-900 mb-6">Dashboard Overview</h1>
           
           {/* Stats Grid */}
@@ -143,7 +156,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ appointments, on
                         {apt.status === 'pending' && (
                            <>
                             <button 
-                              onClick={() => onUpdateStatus(apt.id, 'scheduled')}
+                              onClick={() => updateAppointmentStatus(apt.id, 'scheduled')}
                               className="text-green-600 hover:text-green-800 font-medium text-xs border border-green-200 bg-green-50 px-3 py-1 rounded"
                             >
                               Approve
@@ -152,7 +165,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ appointments, on
                         )}
                         {apt.status !== 'cancelled' && (
                           <button 
-                            onClick={() => onUpdateStatus(apt.id, 'cancelled')}
+                            onClick={() => updateAppointmentStatus(apt.id, 'cancelled')}
                             className="text-red-600 hover:text-red-800 font-medium text-xs border border-red-200 bg-red-50 px-3 py-1 rounded"
                           >
                             Cancel
@@ -176,4 +189,4 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ appointments, on
       </main>
     </div>
   );
-};
+}

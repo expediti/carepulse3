@@ -1,14 +1,15 @@
+"use client"
+
 import React, { useState } from 'react';
-import { User } from '../../types';
-import { Button } from '../ui/button';
-import { Input } from '../ui/input';
-import { Phone, User as UserIcon, FileText, Upload, Shield } from 'lucide-react';
+import { useRouter } from 'next/navigation';
+import { useApp } from '@/lib/context';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Shield, Upload } from 'lucide-react';
 
-interface AuthScreenProps {
-  onLogin: (user: User) => void;
-}
-
-export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
+export default function AuthPage() {
+  const router = useRouter();
+  const { setCurrentUser } = useApp();
   const [isRegistering, setIsRegistering] = useState(false);
   const [phoneNumber, setPhoneNumber] = useState('');
   
@@ -22,24 +23,26 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
     e.preventDefault();
     // Simulation: Admin login check
     if (phoneNumber === '0000') {
-      onLogin({
+      setCurrentUser({
         id: 'admin',
         name: 'Administrator',
         phone: phoneNumber,
         role: 'admin'
       });
+      router.push('/admin');
       return;
     }
     
     // Simple patient login simulation
     if (phoneNumber.length >= 10) {
-       onLogin({
+       setCurrentUser({
         id: 'u-' + phoneNumber,
         name: 'Returning Patient',
         phone: phoneNumber,
         role: 'patient',
         medicalHistory: 'No significant history.'
       });
+      router.push('/patient');
     } else {
       alert('Please enter a valid phone number');
     }
@@ -53,7 +56,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
     }
 
     // Simulate successful registration
-    onLogin({
+    setCurrentUser({
       id: 'u-' + Date.now(),
       name,
       phone: phoneNumber,
@@ -62,6 +65,7 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
       identificationUrl: idFile ? URL.createObjectURL(idFile) : undefined,
       role: 'patient'
     });
+    router.push('/patient');
   };
 
   return (
@@ -192,4 +196,4 @@ export const AuthScreen: React.FC<AuthScreenProps> = ({ onLogin }) => {
       </div>
     </div>
   );
-};
+}

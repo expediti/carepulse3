@@ -1,32 +1,36 @@
-import React, { useState } from 'react';
-import { User, Appointment, Doctor } from '../../types';
-import { MOCK_DOCTORS } from '../../constants';
-import { Button } from '../ui/button';
-import { Calendar, Clock, MapPin, X, Plus, Bell, CheckCircle, User as UserIcon } from 'lucide-react';
-import { BookingModal } from './BookingModal';
+"use client"
 
-interface PatientDashboardProps {
-  user: User;
-  appointments: Appointment[];
-  onCancelAppointment: (id: string) => void;
-  onBookAppointment: (appointment: Omit<Appointment, 'id' | 'status'>) => void;
-  onLogout: () => void;
-}
+import React, { useState, useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useApp } from '@/lib/context';
+import { MOCK_DOCTORS } from '@/constants';
+import { Button } from '@/components/ui/button';
+import { AppointmentForm } from '@/components/forms/AppointmentForm';
+import { Calendar, Clock, Plus, Bell, CheckCircle, User as UserIcon } from 'lucide-react';
 
-export const PatientDashboard: React.FC<PatientDashboardProps> = ({
-  user,
-  appointments,
-  onCancelAppointment,
-  onBookAppointment,
-  onLogout
-}) => {
+export default function PatientDashboard() {
+  const router = useRouter();
+  const { currentUser, appointments, cancelAppointment, addAppointment, setCurrentUser } = useApp();
   const [isBookingOpen, setIsBookingOpen] = useState(false);
 
-  const myAppointments = appointments.filter(a => a.patientId === user.id);
+  useEffect(() => {
+    if (!currentUser || currentUser.role !== 'patient') {
+      router.push('/auth');
+    }
+  }, [currentUser, router]);
+
+  if (!currentUser) return null;
+
+  const myAppointments = appointments.filter(a => a.patientId === currentUser.id);
   const upcomingAppointments = myAppointments.filter(a => a.status === 'scheduled' || a.status === 'pending');
   const pastAppointments = myAppointments.filter(a => a.status === 'completed' || a.status === 'cancelled');
 
   const getDoctor = (id: string) => MOCK_DOCTORS.find(d => d.id === id);
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    router.push('/');
+  };
 
   return (
     <div className="min-h-screen bg-slate-50">
@@ -41,18 +45,18 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
           </div>
           <div className="flex items-center gap-4">
             <div className="hidden sm:flex flex-col items-end">
-              <span className="text-sm font-medium text-slate-900">{user.name}</span>
-              <span className="text-xs text-slate-500">{user.phone}</span>
+              <span className="text-sm font-medium text-slate-900">{currentUser.name}</span>
+              <span className="text-xs text-slate-500">{currentUser.phone}</span>
             </div>
             <div className="h-8 w-8 bg-slate-200 rounded-full flex items-center justify-center">
               <UserIcon className="w-5 h-5 text-slate-500" />
             </div>
-            <Button variant="outline" size="sm" onClick={onLogout}>Sign Out</Button>
+            <Button variant="outline" size="sm" onClick={handleLogout}>Sign Out</Button>
           </div>
         </div>
       </header>
 
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 pb-20">
         {/* Welcome Section */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-8">
           <div>
@@ -119,7 +123,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                             </div>
                           </div>
                           <div className="flex sm:flex-col gap-2">
-                            <Button variant="danger" size="sm" onClick={() => onCancelAppointment(apt.id)}>
+                            <Button variant="danger" size="sm" onClick={() => cancelAppointment(apt.id)}>
                               Cancel
                             </Button>
                           </div>
@@ -166,13 +170,13 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
               <div className="space-y-4">
                 <div>
                   <label className="text-xs font-medium text-slate-500 uppercase">Medical History</label>
-                  <p className="text-sm text-slate-700 mt-1">{user.medicalHistory || 'None recorded'}</p>
+                  <p className="text-sm text-slate-700 mt-1">{currentUser.medicalHistory || 'None recorded'}</p>
                 </div>
                 <div>
                   <label className="text-xs font-medium text-slate-500 uppercase">Age</label>
-                  <p className="text-sm text-slate-700 mt-1">{user.age || 'N/A'} Years</p>
+                  <p className="text-sm text-slate-700 mt-1">{currentUser.age || 'N/A'} Years</p>
                 </div>
-                {user.identificationUrl && (
+                {currentUser.identificationUrl && (
                    <div>
                    <label className="text-xs font-medium text-slate-500 uppercase">Identification</label>
                    <div className="mt-2 p-2 bg-slate-50 border border-slate-200 rounded flex items-center gap-2">
@@ -192,7 +196,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
                 <div>
                   <h3 className="font-medium">SMS Notifications</h3>
                   <p className="text-sm text-slate-300 mt-1">
-                    You will receive text alerts for appointment confirmations and reminders at <span className="font-mono bg-white/10 px-1 rounded">{user.phone}</span>.
+                    You will receive text alerts for appointment confirmations and reminders at <span className="font-mono bg-white/10 px-1 rounded">{currentUser.phone}</span>.
                   </p>
                 </div>
               </div>
@@ -202,15 +206,16 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({
       </main>
 
       {isBookingOpen && (
-        <BookingModal 
-          isOpen={isBookingOpen} 
-          onClose={() => setIsBookingOpen(false)}
-          onConfirm={(data) => {
-            onBookAppointment(data);
-            setIsBookingOpen(false);
-          }}
-        />
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50">
+          <AppointmentForm 
+            onCancel={() => setIsBookingOpen(false)}
+            onSubmit={(data) => {
+              addAppointment(data);
+              setIsBookingOpen(false);
+            }}
+          />
+        </div>
       )}
     </div>
   );
-};
+}

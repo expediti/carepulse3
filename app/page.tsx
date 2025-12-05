@@ -1,12 +1,18 @@
+"use client"
+
 import React from 'react';
-import { Button } from './ui/button';
+import Link from 'next/link';
+import { Button } from '@/components/ui/button';
 import { Shield, Calendar, Clock, Activity, ArrowRight, UserCheck, Lock } from 'lucide-react';
+import { useRouter } from 'next/navigation';
 
-interface LandingPageProps {
-  onGetStarted: () => void;
-}
+export default function LandingPage() {
+  const router = useRouter();
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
+  const handleGetStarted = () => {
+    router.push('/auth');
+  };
+
   return (
     <div className="min-h-screen bg-white text-slate-900 flex flex-col font-sans">
       {/* Navbar */}
@@ -19,8 +25,8 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
             <span className="font-bold text-xl tracking-tight">MedCare Connect</span>
           </div>
           <div className="flex gap-4">
-             <Button variant="outline" size="sm" onClick={onGetStarted}>Sign In</Button>
-             <Button size="sm" onClick={onGetStarted}>Get Started</Button>
+             <Button variant="outline" size="sm" onClick={handleGetStarted}>Sign In</Button>
+             <Button size="sm" onClick={handleGetStarted}>Get Started</Button>
           </div>
         </div>
       </nav>
@@ -51,10 +57,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               </p>
               
               <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-                <Button size="lg" className="rounded-full px-8 h-14 text-lg w-full sm:w-auto" onClick={onGetStarted}>
+                <Button size="lg" className="rounded-full px-8 h-14 text-lg w-full sm:w-auto" onClick={handleGetStarted}>
                   Book Appointment <ArrowRight className="ml-2 w-5 h-5" />
                 </Button>
-                <Button variant="outline" size="lg" className="rounded-full px-8 h-14 text-lg w-full sm:w-auto bg-white" onClick={onGetStarted}>
+                <Button variant="outline" size="lg" className="rounded-full px-8 h-14 text-lg w-full sm:w-auto bg-white" onClick={handleGetStarted}>
                   Patient Portal
                 </Button>
               </div>
@@ -103,17 +109,16 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onGetStarted }) => {
               <span className="font-bold text-xl text-white tracking-tight">MedCare Connect</span>
             </div>
             <div className="flex gap-6 mb-8 text-sm">
-              <a href="#" className="hover:text-white transition-colors">Privacy</a>
-              <a href="#" className="hover:text-white transition-colors">Terms</a>
-              <a href="#" className="hover:text-white transition-colors">Support</a>
+              <Link href="#" className="hover:text-white transition-colors">Privacy</Link>
+              <Link href="#" className="hover:text-white transition-colors">Terms</Link>
+              <Link href="#" className="hover:text-white transition-colors">Support</Link>
             </div>
             <p className="text-sm text-slate-500">© 2024 MedCare Connect. All rights reserved.</p>
-            <p className="mt-8 text-[10px] uppercase tracking-widest text-slate-600">created by nidhi and kashish</p>
         </div>
       </footer>
     </div>
   );
-};
+}
 
 const FeatureCard = ({ icon, title, description }: { icon: React.ReactNode, title: string, description: string }) => (
   <div className="bg-white p-8 rounded-2xl shadow-sm border border-slate-200 hover:shadow-lg hover:border-slate-300 transition-all duration-300">
